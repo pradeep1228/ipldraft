@@ -135,7 +135,7 @@ function LoginScreen({ loginCode, setLoginCode, loginError, onLogin, hostCode })
         <input style={S.input} placeholder="Enter your code" value={loginCode} onChange={e => setLoginCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === "Enter" && onLogin()} maxLength={12} />
         {loginError && <p style={S.error}>{loginError}</p>}
         <button style={S.btnPrimary} onClick={onLogin}>Join Draft →</button>
-        <div style={S.hostHint}><span style={{opacity:0.5}}>Host code: </span><code style={S.hostCode}></code></div>
+        <div style={S.hostHint}><span style={{opacity:0.5}}>Host code: </span><code style={S.hostCode}>{hostCode}</code></div>
       </div>
     </div>
   );
@@ -349,8 +349,16 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
           <div>
             <h2 style={S.sectionTitle}>Draft Settings</h2>
             <div style={{background:"#fffbe6",border:"1px solid rgba(255,215,0,0.2)",borderRadius:12,padding:"16px 20px",marginBottom:20}}>
-              <div style={{color:"#b8860b",fontWeight:600,marginBottom:10}}>Squad Rules (fixed)</div>
-              <div style={{fontSize:13,color:"#ccc",lineHeight:2}}>✓ Each participant picks <b>11 players</b><br/>✓ Exactly <b>4 Batters · 2 All-rounders · 1 Wicket-keeper · 4 Bowlers</b></div>
+              <div style={{color:"#b8860b",fontWeight:700,marginBottom:10}}>Squad Rules</div>
+              <div style={{fontSize:13,color:"#555",lineHeight:2}}>
+                ✓ Each participant picks <b>{appState.squadRules?.total || 11} players</b><br/>
+                {Object.entries(appState.squadRules?.roles || {}).filter(([,n])=>n>0).length > 0
+                  ? <>✓ Minimum: <b>{Object.entries(appState.squadRules?.roles || {}).filter(([,n])=>n>0).map(([r,n])=>`${n} ${r}(s)`).join(" · ")}</b><br/></>
+                  : <>✓ <b>No role restrictions</b><br/></>}
+                {(appState.squadRules?.maxPerTeam || 0) > 0
+                  ? <>✓ Max <b>{appState.squadRules.maxPerTeam} player(s)</b> from same team</>
+                  : <>✓ <b>No team restriction</b></>}
+              </div>
             </div>
             <div style={S.settingRow}><label style={S.label}>Rounds (set to 11)</label><input type="number" min={1} max={20} style={{...S.input,width:80}} value={rounds} onChange={e=>setRounds(parseInt(e.target.value)||11)} /></div>
             {/* Max players per team */}
@@ -575,7 +583,12 @@ function SquadScreen({ appState, user, onBack }) {
           <div style={{background:"#e8f5e9",border:"1px solid rgba(0,200,100,0.3)",borderRadius:12,padding:"20px",marginTop:16,textAlign:"center"}}>
             <div style={{fontSize:32,marginBottom:8}}>🏆</div>
             <div style={{color:"#1a6b35",fontWeight:700,fontSize:18}}>{participant?.name}'s squad is complete!</div>
-            <div style={{color:"#555555",fontSize:13,marginTop:6}}>4 Batters · 2 All-rounders · 1 Wicket-keeper · 4 Bowlers · 1 from each IPL team</div>
+            <div style={{color:"#555555",fontSize:13,marginTop:6}}>
+              {[
+                ...Object.entries(appState.squadRules?.roles||{}).filter(([,n])=>n>0).map(([r,n])=>`${n} ${r}(s)`),
+                ...(appState.squadRules?.maxPerTeam>0?[`max ${appState.squadRules.maxPerTeam} per team`]:[])
+              ].join(" · ")}
+            </div>
           </div>
         )}
       </div>
