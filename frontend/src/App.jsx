@@ -17,7 +17,7 @@ const IPL_TEAMS = [
 ];
 
 const ROLES = ["Batter", "Bowler", "All-rounder", "Wicket-keeper"];
-const SQUAD_RULES = { total: 11, minPerTeam: 1, roles: { "Batter": 4, "All-rounder": 2, "Wicket-keeper": 1, "Bowler": 4 } };
+const SQUAD_RULES = { total: 11, roles: { "Batter": 4, "All-rounder": 2, "Wicket-keeper": 1, "Bowler": 4 } };
 
 function validateSquad(picks, allPlayers) {
   const players = picks.map(id => allPlayers.find(p => p.id === id)).filter(Boolean);
@@ -26,9 +26,6 @@ function validateSquad(picks, allPlayers) {
   const roleCounts = {};
   players.forEach(p => { roleCounts[p.role] = (roleCounts[p.role] || 0) + 1; });
   Object.entries(SQUAD_RULES.roles).forEach(([role, count]) => { if ((roleCounts[role] || 0) < count) errors.push(`Need ${count} ${role}(s), have ${roleCounts[role] || 0}`); });
-  const teamsSeen = new Set(players.map(p => p.team));
-  const missingTeams = IPL_TEAMS.filter(t => !teamsSeen.has(t.id));
-  if (missingTeams.length > 0) errors.push(`Missing player from: ${missingTeams.map(t => t.id).join(", ")}`);
   return errors;
 }
 
@@ -335,7 +332,7 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
             <h2 style={S.sectionTitle}>Draft Settings</h2>
             <div style={{background:"#fffbe6",border:"1px solid rgba(255,215,0,0.2)",borderRadius:12,padding:"16px 20px",marginBottom:20}}>
               <div style={{color:"#b8860b",fontWeight:600,marginBottom:10}}>Squad Rules (fixed)</div>
-              <div style={{fontSize:13,color:"#ccc",lineHeight:2}}>✓ Each participant picks <b>11 players</b><br/>✓ At least <b>1 player from each IPL team</b><br/>✓ Exactly <b>4 Batters · 2 All-rounders · 1 Wicket-keeper · 4 Bowlers</b></div>
+              <div style={{fontSize:13,color:"#ccc",lineHeight:2}}>✓ Each participant picks <b>11 players</b><br/>✓ Exactly <b>4 Batters · 2 All-rounders · 1 Wicket-keeper · 4 Bowlers</b></div>
             </div>
             <div style={S.settingRow}><label style={S.label}>Rounds (set to 11)</label><input type="number" min={1} max={20} style={{...S.input,width:80}} value={rounds} onChange={e=>setRounds(parseInt(e.target.value)||11)} /></div>
             <div style={S.settingRow}><label style={S.label}>Host Code</label><code style={S.hostCode}>{appState.hostCode}</code></div>
@@ -362,8 +359,6 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
     const currentPicks = myPicks.map(id => players.find(p => p.id === id)).filter(Boolean);
     const roleCounts = {}; currentPicks.forEach(p => { roleCounts[p.role] = (roleCounts[p.role]||0)+1; });
     if ((roleCounts[player.role]||0) >= SQUAD_RULES.roles[player.role]) return `Already have ${SQUAD_RULES.roles[player.role]} ${player.role}(s)`;
-    const teamsSeen = new Set(currentPicks.map(p => p.team));
-    if (teamsSeen.has(player.team)) return `Already have a ${player.team} player`;
     return null;
   }
 
@@ -499,10 +494,6 @@ function SquadScreen({ appState, user, onBack }) {
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
           {Object.entries(SQUAD_RULES.roles).map(([role,need])=>{ const have=progress.roles[role]||0; const ok=have>=need; return <div key={role} style={{padding:"6px 14px",borderRadius:20,fontSize:13,fontWeight:600,background:ok?"#d4edda":"#f0f0f0",color:ok?"#1a6b35":"#777777",border:`1px solid ${ok?"#81c784":"#e0e0e0"}`}}>{role} {have}/{need}</div>; })}
           <div style={{padding:"6px 14px",borderRadius:20,fontSize:13,fontWeight:600,background:picks.length===SQUAD_RULES.total?"#d4edda":"#f0f0f0",color:picks.length===SQUAD_RULES.total?"#1a6b35":"#555555",border:"1px solid #e0e0e0"}}>Total {picks.length}/{SQUAD_RULES.total}</div>
-        </div>
-
-        <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:20}}>
-          {IPL_TEAMS.map(t=>{ const covered=progress.teamsSeen.has(t.id); return <span key={t.id} style={{padding:"3px 10px",borderRadius:20,fontSize:11,fontWeight:600,background:covered?t.color:"#f0f0f0",color:covered?"#111111":"#555555",border:`1px solid ${covered?t.color:"#eeeeee"}`}}>{t.id}</span>; })}
         </div>
 
         {picks.length===0?<div style={{color:"#555555",textAlign:"center",padding:"3rem"}}>No players picked yet.</div>:(
