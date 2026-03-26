@@ -187,6 +187,35 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
 
   function resetDraft() { mutate(s => { s.draftStarted = false; s.draftEnded = false; s.currentTurn = 0; s.snakeOrder = []; s.participants.forEach(p => p.picks = []); s.players.forEach(p => { p.picked = false; p.pickedBy = null; }); return s; }); }
 
+  function clearEverything() {
+    mutate(s => {
+      s.players = [];
+      s.participants = [];
+      s.draftStarted = false;
+      s.draftEnded = false;
+      s.currentTurn = 0;
+      s.snakeOrder = [];
+      s.hostCode = "HOST" + Math.random().toString(36).slice(2, 6).toUpperCase();
+      return s;
+    });
+  }
+
+  function clearPoints() {
+    mutate(s => { s.players.forEach(p => { p.points = 0; }); return s; });
+  }
+
+  function clearPicksOnly() {
+    mutate(s => {
+      s.draftStarted = false;
+      s.draftEnded = false;
+      s.currentTurn = 0;
+      s.snakeOrder = [];
+      s.participants.forEach(p => p.picks = []);
+      s.players.forEach(p => { p.picked = false; p.pickedBy = null; p.points = 0; });
+      return s;
+    });
+  }
+
   const filtered = appState.players.filter(p => (filterTeam === "ALL" || p.team === filterTeam) && p.name.toLowerCase().includes(search.toLowerCase()));
   const teamCount = {}; appState.players.forEach(p => { teamCount[p.team] = (teamCount[p.team]||0)+1; });
 
@@ -201,8 +230,10 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
         ))}
         <div style={{flex:1}} />
         <button style={S.btnStart} onClick={startDraft}>▶ Start Draft</button>
-        {appState.draftStarted && <button style={{...S.btnStart,background:"#555555",marginTop:8}} onClick={onGoToDraft}>View Draft →</button>}
-        <button style={{...S.btnStart,background:"#c0392b",marginTop:8}} onClick={resetDraft}>↺ Reset</button>
+        {appState.draftStarted && <button style={{...S.btnStart,background:"#444",marginTop:8}} onClick={onGoToDraft}>View Draft →</button>}
+        <button style={{...S.btnStart,background:"#b03020",marginTop:8}} onClick={() => { if(window.confirm("Reset draft picks? Players and participants stay, all picks and points cleared.")) clearPicksOnly(); }}>↺ Reset Draft</button>
+        <button style={{...S.btnStart,background:"#7b1fa2",marginTop:8}} onClick={() => { if(window.confirm("Clear all points? Player list and participants stay.")) clearPoints(); }}>🗑 Clear Points</button>
+        <button style={{...S.btnStart,background:"#c62828",marginTop:8}} onClick={() => { if(window.confirm("⚠️ Start fresh? This clears EVERYTHING — all players, participants, picks and points. Cannot be undone.")) clearEverything(); }}>⚡ Start Fresh</button>
         <div style={S.hostCodeBox}>Host Code: <b>{appState.hostCode}</b></div>
       </div>
 
@@ -681,11 +712,11 @@ const S = {
   error:{color:"#cc0000",fontSize:13,margin:"8px 0"},hostHint:{marginTop:20,fontSize:12,color:"#666666"},hostCode:{color:"#b8860b",fontFamily:"monospace",fontSize:13},
   hostWrap:{display:"flex",minHeight:"100vh",background:"#f5f5f5",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#111111"},
   sidebar:{width:220,background:"#111111",borderRight:"1px solid rgba(255,255,255,0.08)",display:"flex",flexDirection:"column",padding:"1.5rem 1rem",gap:6,flexShrink:0},
-  sidebarLogo:{color:"#b8860b",fontWeight:800,fontSize:18,marginBottom:16,paddingLeft:8},
-  sidebarBtn:{background:"transparent",border:"none",color:"#777777",textAlign:"left",padding:"10px 12px",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"inherit",transition:"all 0.15s"},
+  sidebarLogo:{color:"#FFD700",fontWeight:800,fontSize:18,marginBottom:16,paddingLeft:8},
+  sidebarBtn:{background:"transparent",border:"none",color:"#aaaaaa",textAlign:"left",padding:"10px 12px",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"inherit",transition:"all 0.15s"},
   sidebarBtnActive:{background:"#fff8cc",color:"#b8860b",fontWeight:600},
   btnStart:{background:"linear-gradient(135deg,#b8860b,#e07b00)",color:"#000",border:"none",borderRadius:10,padding:"10px 14px",fontWeight:700,cursor:"pointer",fontFamily:"inherit",fontSize:13},
-  hostCodeBox:{marginTop:12,color:"#555555",fontSize:11,textAlign:"center"},hostMain:{flex:1,padding:"2rem",overflowY:"auto"},
+  hostCodeBox:{marginTop:12,color:"#555555",fontSize:11,textAlign:"center"},hostMain:{flex:1,padding:"2rem",overflowY:"auto",background:"#f5f5f5"},
   sectionTitle:{color:"#111111",fontWeight:700,fontSize:20,marginBottom:20,display:"flex",alignItems:"center",gap:10},
   badge:{background:"#b8860b",color:"#000",borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700},
   addRow:{display:"flex",gap:10,marginBottom:16,alignItems:"center",flexWrap:"wrap"},
@@ -695,7 +726,7 @@ const S = {
   btnImport:{display:"inline-block",background:"linear-gradient(135deg,#1a472a,#2ecc71)",color:"#111111",borderRadius:10,padding:"10px 18px",fontWeight:700,fontSize:13,fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0,border:"none"},
   importResult:{border:"1px solid",borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,color:"#111111"},
   playerGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10},
-  playerCard:{background:"#111111",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",transition:"background 0.2s"},
+  playerCard:{background:"#ffffff",border:"1px solid #e0e0e0",borderRadius:10,padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",transition:"background 0.2s",boxShadow:"0 1px 4px rgba(0,0,0,0.06)"},
   playerName:{color:"#111111",fontWeight:600,fontSize:14,marginBottom:6},playerMeta:{display:"flex",gap:6,alignItems:"center"},
   teamPill:{color:"#111111",fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:600},
   rolePill:{color:"#555555",fontSize:11,background:"#e0e0e0",padding:"2px 8px",borderRadius:20},
@@ -717,7 +748,7 @@ const S = {
   tabBar:{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.08)",paddingLeft:16},
   tabBtn:{background:"none",border:"none",color:"#777777",padding:"14px 20px",cursor:"pointer",fontSize:13,fontFamily:"inherit",borderBottom:"2px solid transparent"},
   tabBtnActive:{color:"#b8860b",borderBottomColor:"#b8860b"},
-  draftBody:{flex:1,padding:"16px 20px",overflowY:"auto"},
+  draftBody:{flex:1,padding:"16px 20px",overflowY:"auto",background:"#f5f5f5"},
   boardGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14},
   boardCard:{background:"#111111",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"14px"},
   boardHeader:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,fontWeight:700,fontSize:14},
