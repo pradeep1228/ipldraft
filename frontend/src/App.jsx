@@ -277,7 +277,7 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
                     <div style={{...S.participantNum,background:i===0?"#b8860b":i===1?"#C0C0C0":i===2?"#cd7f32":"#dddddd",color:i<3?"#000":"#555555",fontSize:11,width:36,height:36}}>{i===0?"1st":i===1?"2nd":i===2?"3rd":`${i+1}`}</div>
                     <div style={{flex:1}}><div style={S.playerName}>{p.name}</div><div style={{color:"#555555",fontSize:13}}>Code: <b style={{color:"#b8860b"}}>{p.code}</b> · {prog.total}/{SQUAD_RULES.total} picks</div></div>
                     {prog.done&&<span style={{color:"#1a6b35",fontSize:12,fontWeight:600}}>✓ Done</span>}
-                    <button style={{background:"none",border:"1px solid rgba(255,255,255,0.15)",color:"#555555",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:12,marginLeft:8}} onClick={()=>onViewSquad(p)}>👁 Squad</button>
+                    <button style={{background:"none",border:"1px solid #cccccc",color:"#555555",borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:12,marginLeft:8}} onClick={()=>onViewSquad(p)}>👁 Squad</button>
                     <button style={S.delBtn} onClick={()=>removeParticipant(p.code)}>✕</button>
                   </div>
                 );
@@ -298,8 +298,8 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
                     const prog=getSquadProgress(p.picks||[],appState.players);
                     const isActive=i===appState.snakeOrder[appState.currentTurn]&&!appState.draftEnded;
                     return (
-                      <div key={p.code} onClick={()=>onViewSquad(p)} style={{background:isActive?"#fff8cc":"#111111",border:`1px solid ${isActive?"#b8860b":"#e0e0e0"}`,borderRadius:10,padding:"10px 14px",cursor:"pointer",minWidth:150}}>
-                        <div style={{fontWeight:600,fontSize:13,color:isActive?"#b8860b":"#111111",marginBottom:4}}>{isActive?"● ":""}{p.name}</div>
+                      <div key={p.code} onClick={()=>onViewSquad(p)} style={{background:isActive?"#fffbe6":"#ffffff",border:`1px solid ${isActive?"#b8860b":"#e0e0e0"}`,borderRadius:10,padding:"10px 14px",cursor:"pointer",minWidth:150}}>
+                        <div style={{fontWeight:600,fontSize:13,color:isActive?"#b8860b":"#222222",marginBottom:4}}>{isActive?"● ":""}{p.name}</div>
                         <div style={{fontSize:12,color:"#555555",marginBottom:6}}>{prog.total}/{SQUAD_RULES.total} picks</div>
                         <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>
                           {Object.entries(SQUAD_RULES.roles).map(([role,need])=>{ const have=prog.roles[role]||0; return <span key={role} style={{fontSize:10,padding:"1px 6px",borderRadius:10,background:have>=need?"#c8e6c9":"#f0f0f0",color:have>=need?"#1a6b35":"#666666"}}>{role.slice(0,3)} {have}/{need}</span>; })}
@@ -316,7 +316,7 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
                     const isActive=i===appState.snakeOrder[appState.currentTurn]&&!appState.draftEnded;
                     return (
                       <div key={p.code} style={{...S.boardCard,...(isActive?{borderColor:"#b8860b"}:{}),cursor:"pointer"}} onClick={()=>onViewSquad(p)}>
-                        <div style={S.boardHeader}><span style={{color:isActive?"#b8860b":"#111111"}}>{p.name}</span><span style={{color:"#555555",fontSize:12}}>{myPicks.length}/{SQUAD_RULES.total}</span></div>
+                        <div style={S.boardHeader}><span style={{color:isActive?"#b8860b":"#222222"}}>{p.name}</span><span style={{color:"#555555",fontSize:12}}>{myPicks.length}/{SQUAD_RULES.total}</span></div>
                         {myPicks.length===0?<div style={{color:"#555555",fontSize:12,padding:"0.5rem 0",textAlign:"center"}}>No picks yet</div>:myPicks.map(pl=>{ const team=IPL_TEAMS.find(t=>t.id===pl.team); return <div key={pl.id} style={S.miniPick}><span style={{...S.teamPill,background:team?.color||"#888888",fontSize:10}}>{pl.team}</span><span style={{fontSize:12,flex:1}}>{pl.name}</span><span style={{color:"#777777",fontSize:10}}>{pl.role.slice(0,3)}</span></div>; })}
                         {myPicks.length>0&&<div style={{color:"#555555",fontSize:11,marginTop:6,textAlign:"center"}}>Tap to view squad →</div>}
                       </div>
@@ -399,7 +399,7 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
       </div>
 
       {!currentUser?.isHost&&draftStarted&&(
-        <div style={{background:"#111111",padding:"10px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
+        <div style={{background:"#f8f8f8",padding:"10px 20px",borderBottom:"1px solid rgba(255,255,255,0.06)",display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}>
           <span style={{color:"#666666",fontSize:12}}>My squad:</span>
           {Object.entries(SQUAD_RULES.roles).map(([role,need])=>{ const have=myProgress.roles[role]||0; return <span key={role} style={{fontSize:12,padding:"3px 10px",borderRadius:20,background:have>=need?"#d4edda":"#f0f0f0",color:have>=need?"#1a6b35":"#777777",border:`1px solid ${have>=need?"#81c784":"#e0e0e0"}`}}>{role.slice(0,3)} {have}/{need}</span>; })}
           <span style={{fontSize:12,color:"#666666",marginLeft:"auto"}}>{myPicks.length}/{SQUAD_RULES.total}</span>
@@ -408,8 +408,8 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
       )}
 
       {!draftEnded?(
-        <div style={{...S.statusBanner,background:isMyTurn?"#d4edda":"#f0f0f0"}}>
-          {draftStarted?(<><div style={S.statusRound}>Round {round} · Pick {pickInRound} of {participants.length}</div><div style={S.statusPicker}>{isMyTurn?"🟢 Your turn to pick!":`⏳ Waiting for ${currentPicker?.name||"…"}`}</div><div style={S.snakeTrack}>{participants.map((p,i)=><div key={p.code} style={{...S.snakeNode,background:i===currentPickerIdx?"#b8860b":"#dddddd",color:i===currentPickerIdx?"#000":"#555555",transform:i===currentPickerIdx?"scale(1.1)":"scale(1)"}}>{p.name.split(" ")[0]}</div>)}</div></>):<div style={{color:"#777777"}}>Draft not started yet…</div>}
+        <div style={{...S.statusBanner,background:isMyTurn?"#d4edda":"#f8f9fa"}}>
+          {draftStarted?(<><div style={S.statusRound}>Round {round} · Pick {pickInRound} of {participants.length}</div><div style={S.statusPicker}>{isMyTurn?"🟢 Your turn to pick!":`⏳ Waiting for ${currentPicker?.name||"…"}`}</div><div style={S.snakeTrack}>{participants.map((p,i)=><div key={p.code} style={{...S.snakeNode,background:i===currentPickerIdx?"#b8860b":"#e8e8e8",color:i===currentPickerIdx?"#000":"#555555",transform:i===currentPickerIdx?"scale(1.1)":"scale(1)"}}>{p.name.split(" ")[0]}</div>)}</div></>):<div style={{color:"#777777"}}>Draft not started yet…</div>}
         </div>
       ):(
         <div style={{...S.statusBanner,background:"#d4edda",textAlign:"center"}}>
@@ -440,7 +440,7 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
                 <div key={p.id} style={{...S.playerCard,borderLeft:`4px solid ${team?.color||"#777777"}`,cursor:canPick&&!blocked?"pointer":"default",opacity:canPick&&!blocked?1:0.45}}
                   onClick={()=>canPick&&!blocked&&pickPlayer(p.id)}
                   onMouseEnter={e=>{if(canPick&&!blocked)e.currentTarget.style.background="#f0f4ff";}}
-                  onMouseLeave={e=>{e.currentTarget.style.background="#111111";}}>
+                  onMouseLeave={e=>{e.currentTarget.style.background="#ffffff";}}>
                   <div style={{flex:1}}><div style={S.playerName}>{p.name}</div><div style={S.playerMeta}><span style={{...S.teamPill,background:team?.color||"#888888"}}>{p.team}</span><span style={S.rolePill}>{p.role}</span></div>{blocked&&<div style={{color:"#cc0000",fontSize:11,marginTop:4}}>⛔ {violation}</div>}</div>
                   {canPick&&!blocked&&<div style={{color:"#b8860b",fontSize:20}}>+</div>}
                 </div>
@@ -465,7 +465,7 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
               const isActive=i===currentPickerIdx&&!draftEnded;
               return (
                 <div key={p.code} style={{...S.boardCard,...(isActive?{borderColor:"#b8860b"}:{}),cursor:"pointer"}} onClick={()=>onViewSquad(p)}>
-                  <div style={S.boardHeader}><span style={{color:isActive?"#b8860b":"#111111"}}>{p.name}</span><span style={{color:"#555555",fontSize:12}}>{mp.length}/{SQUAD_RULES.total}</span></div>
+                  <div style={S.boardHeader}><span style={{color:isActive?"#b8860b":"#222222"}}>{p.name}</span><span style={{color:"#555555",fontSize:12}}>{mp.length}/{SQUAD_RULES.total}</span></div>
                   {mp.length===0?<div style={{color:"#555555",fontSize:12,padding:"0.5rem 0",textAlign:"center"}}>No picks yet</div>:mp.map(pl=>{ const team=IPL_TEAMS.find(t=>t.id===pl.team); return <div key={pl.id} style={S.miniPick}><span style={{...S.teamPill,background:team?.color||"#888888",fontSize:10}}>{pl.team}</span><span style={{fontSize:12,flex:1}}>{pl.name}</span><span style={{color:"#777777",fontSize:10}}>{pl.role.slice(0,3)}</span></div>; })}
                   {mp.length>0&&<div style={{color:"#555555",fontSize:11,marginTop:6,textAlign:"center"}}>Tap to view squad →</div>}
                 </div>
@@ -495,10 +495,10 @@ function SquadScreen({ appState, user, onBack }) {
         <div style={{fontSize:13,color:isComplete?"#1a6b35":"#555555"}}>{isComplete?"✓ Valid squad":picks.length+"/"+SQUAD_RULES.total+" picked"}</div>
       </div>
 
-      <div style={{padding:"20px",maxWidth:860,margin:"0 auto",width:"100%",overflowY:"auto"}}>
+      <div style={{padding:"20px",maxWidth:860,margin:"0 auto",width:"100%",overflowY:"auto",background:"#f5f5f5"}}>
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:16}}>
           {Object.entries(SQUAD_RULES.roles).map(([role,need])=>{ const have=progress.roles[role]||0; const ok=have>=need; return <div key={role} style={{padding:"6px 14px",borderRadius:20,fontSize:13,fontWeight:600,background:ok?"#d4edda":"#f0f0f0",color:ok?"#1a6b35":"#777777",border:`1px solid ${ok?"#81c784":"#e0e0e0"}`}}>{role} {have}/{need}</div>; })}
-          <div style={{padding:"6px 14px",borderRadius:20,fontSize:13,fontWeight:600,background:picks.length===SQUAD_RULES.total?"#d4edda":"#f0f0f0",color:picks.length===SQUAD_RULES.total?"#1a6b35":"#555555",border:"1px solid rgba(255,255,255,0.08)"}}>Total {picks.length}/{SQUAD_RULES.total}</div>
+          <div style={{padding:"6px 14px",borderRadius:20,fontSize:13,fontWeight:600,background:picks.length===SQUAD_RULES.total?"#d4edda":"#f0f0f0",color:picks.length===SQUAD_RULES.total?"#1a6b35":"#555555",border:"1px solid #e0e0e0"}}>Total {picks.length}/{SQUAD_RULES.total}</div>
         </div>
 
         <div style={{display:"flex",gap:5,flexWrap:"wrap",marginBottom:20}}>
@@ -699,19 +699,19 @@ function LeaderboardView({ appState, onViewSquad }) {
 }
 
 const S = {
-  loadingWrap:{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#111111",gap:16},
+  loadingWrap:{minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#f0f4ff",gap:16},
   loadingSpinner:{width:40,height:40,border:"3px solid #ddd",borderTop:"3px solid #b8860b",borderRadius:"50%",animation:"spin 0.8s linear infinite"},
   loadingText:{color:"#555555",fontSize:14},
-  syncBadge:{position:"fixed",top:12,right:12,zIndex:9999,background:"#f0f0f0",color:"#555555",fontSize:12,padding:"6px 12px",borderRadius:20,border:"1px solid rgba(255,255,255,0.1)"},
-  loginWrap:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#111111",backgroundImage:"radial-gradient(ellipse at 30% 20%, #1a1040 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, #0d2040 0%, transparent 60%)",fontFamily:"'Segoe UI', system-ui, sans-serif"},
-  loginCard:{background:"#f9f9f9",border:"1px solid rgba(255,255,255,0.1)",borderRadius:20,padding:"3rem 2.5rem",textAlign:"center",width:360,boxShadow:"0 4px 24px rgba(0,0,0,0.10)"},
+  syncBadge:{position:"fixed",top:12,right:12,zIndex:9999,background:"#f0f0f0",color:"#555555",fontSize:12,padding:"6px 12px",borderRadius:20,border:"1px solid #e0e0e0"},
+  loginWrap:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#f0f4ff",backgroundImage:"radial-gradient(ellipse at 30% 20%, #1a1040 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, #0d2040 0%, transparent 60%)",fontFamily:"'Segoe UI', system-ui, sans-serif"},
+  loginCard:{background:"#ffffff",border:"1px solid #e0e0e0",borderRadius:20,padding:"3rem 2.5rem",textAlign:"center",width:360,boxShadow:"0 4px 24px rgba(0,0,0,0.10)"},
   logoMark:{fontSize:56,marginBottom:12},loginTitle:{color:"#b8860b",fontSize:28,fontWeight:800,margin:"0 0 8px",letterSpacing:-1},
   loginSub:{color:"#555555",fontSize:14,margin:"0 0 2rem"},
-  input:{background:"#f5f5f5",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"10px 14px",color:"#111111",fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"},
+  input:{background:"#ffffff",border:"1px solid #cccccc",borderRadius:10,padding:"10px 14px",color:"#111111",fontSize:14,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"},
   btnPrimary:{background:"linear-gradient(135deg,#b8860b,#e07b00)",color:"#000",border:"none",borderRadius:10,padding:"11px 22px",fontWeight:700,fontSize:15,cursor:"pointer",width:"100%",marginTop:12,fontFamily:"inherit"},
   error:{color:"#cc0000",fontSize:13,margin:"8px 0"},hostHint:{marginTop:20,fontSize:12,color:"#666666"},hostCode:{color:"#b8860b",fontFamily:"monospace",fontSize:13},
   hostWrap:{display:"flex",minHeight:"100vh",background:"#f5f5f5",fontFamily:"'Segoe UI',system-ui,sans-serif",color:"#111111"},
-  sidebar:{width:220,background:"#111111",borderRight:"1px solid rgba(255,255,255,0.08)",display:"flex",flexDirection:"column",padding:"1.5rem 1rem",gap:6,flexShrink:0},
+  sidebar:{width:220,background:"#111111",borderRight:"1px solid #e0e0e0",display:"flex",flexDirection:"column",padding:"1.5rem 1rem",gap:6,flexShrink:0},
   sidebarLogo:{color:"#FFD700",fontWeight:800,fontSize:18,marginBottom:16,paddingLeft:8},
   sidebarBtn:{background:"transparent",border:"none",color:"#aaaaaa",textAlign:"left",padding:"10px 12px",borderRadius:8,cursor:"pointer",fontSize:14,fontFamily:"inherit",transition:"all 0.15s"},
   sidebarBtnActive:{background:"#fff8cc",color:"#b8860b",fontWeight:600},
@@ -721,36 +721,36 @@ const S = {
   badge:{background:"#b8860b",color:"#000",borderRadius:20,padding:"2px 10px",fontSize:12,fontWeight:700},
   addRow:{display:"flex",gap:10,marginBottom:16,alignItems:"center",flexWrap:"wrap"},
   filterRow:{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"},
-  select:{background:"#f5f5f5",border:"1px solid rgba(255,255,255,0.15)",borderRadius:10,padding:"10px 12px",color:"#111111",fontSize:13,outline:"none",fontFamily:"inherit"},
-  importBox:{display:"flex",alignItems:"center",gap:14,background:"#fafafa",border:"1px dashed rgba(255,255,255,0.15)",borderRadius:12,padding:"14px 18px",marginBottom:12},
-  btnImport:{display:"inline-block",background:"linear-gradient(135deg,#1a472a,#2ecc71)",color:"#111111",borderRadius:10,padding:"10px 18px",fontWeight:700,fontSize:13,fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0,border:"none"},
-  importResult:{border:"1px solid",borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,color:"#111111"},
+  select:{background:"#ffffff",border:"1px solid #cccccc",borderRadius:10,padding:"10px 12px",color:"#111111",fontSize:13,outline:"none",fontFamily:"inherit"},
+  importBox:{display:"flex",alignItems:"center",gap:14,background:"#f8f8f8",border:"1px dashed rgba(255,255,255,0.15)",borderRadius:12,padding:"14px 18px",marginBottom:12},
+  btnImport:{display:"inline-block",background:"linear-gradient(135deg,#1a472a,#2ecc71)",color:"#ffffff",borderRadius:10,padding:"10px 18px",fontWeight:700,fontSize:13,fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0,border:"none"},
+  importResult:{border:"1px solid",borderRadius:10,padding:"10px 16px",marginBottom:12,fontSize:13,color:"#222222"},
   playerGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:10},
   playerCard:{background:"#ffffff",border:"1px solid #e0e0e0",borderRadius:10,padding:"12px 14px",display:"flex",justifyContent:"space-between",alignItems:"center",transition:"background 0.2s",boxShadow:"0 1px 4px rgba(0,0,0,0.06)"},
   playerName:{color:"#111111",fontWeight:600,fontSize:14,marginBottom:6},playerMeta:{display:"flex",gap:6,alignItems:"center"},
-  teamPill:{color:"#111111",fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:600},
+  teamPill:{color:"#ffffff",fontSize:11,padding:"2px 8px",borderRadius:20,fontWeight:600},
   rolePill:{color:"#555555",fontSize:11,background:"#e0e0e0",padding:"2px 8px",borderRadius:20},
   delBtn:{background:"none",border:"none",color:"#555555",cursor:"pointer",fontSize:14,padding:4},
   randomizeBox:{display:"flex",alignItems:"center",justifyContent:"space-between",background:"#fffbe6",border:"1px solid rgba(255,215,0,0.2)",borderRadius:12,padding:"14px 18px",marginBottom:16,gap:12},
-  btnRandomize:{background:"linear-gradient(135deg,#7B2FBE,#4A90D9)",color:"#111111",border:"none",borderRadius:10,padding:"10px 18px",fontWeight:700,fontSize:13,fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0,cursor:"pointer"},
+  btnRandomize:{background:"linear-gradient(135deg,#7B2FBE,#4A90D9)",color:"#ffffff",border:"none",borderRadius:10,padding:"10px 18px",fontWeight:700,fontSize:13,fontFamily:"inherit",whiteSpace:"nowrap",flexShrink:0,cursor:"pointer"},
   shuffleBanner:{background:"#d4edda",border:"1px solid rgba(0,200,100,0.3)",borderRadius:10,padding:"12px 16px",marginBottom:14,color:"#1a6b35",fontSize:13},
   participantList:{display:"flex",flexDirection:"column",gap:10},
-  participantCard:{background:"#111111",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:14},
+  participantCard:{background:"#ffffff",border:"1px solid #e0e0e0",borderRadius:10,padding:"12px 16px",display:"flex",alignItems:"center",gap:14},
   participantNum:{width:32,height:32,borderRadius:"50%",background:"#b8860b",color:"#000",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:14,flexShrink:0},
   settingRow:{display:"flex",alignItems:"center",gap:16,marginBottom:20},label:{color:"#555555",fontSize:14,width:200},
   draftWrap:{minHeight:"100vh",background:"#f5f5f5",color:"#111111",fontFamily:"'Segoe UI',system-ui,sans-serif",display:"flex",flexDirection:"column"},
-  draftTopBar:{background:"#111111",borderBottom:"1px solid rgba(255,255,255,0.08)",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px"},
-  backBtn:{background:"none",border:"1px solid rgba(255,255,255,0.15)",color:"#555555",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontFamily:"inherit"},
+  draftTopBar:{background:"#ffffff",borderBottom:"1px solid #e0e0e0",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px"},
+  backBtn:{background:"none",border:"1px solid #cccccc",color:"#555555",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontFamily:"inherit"},
   draftTitle:{color:"#b8860b",fontWeight:800,fontSize:18},userBadge:{color:"#555555",fontSize:13},
   statusBanner:{padding:"16px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",transition:"background 0.5s"},
   statusRound:{color:"#555555",fontSize:12,marginBottom:4},statusPicker:{color:"#111111",fontWeight:700,fontSize:18,marginBottom:12},
   snakeTrack:{display:"flex",gap:8,flexWrap:"wrap"},snakeNode:{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:600,transition:"all 0.3s"},
-  tabBar:{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.08)",paddingLeft:16},
+  tabBar:{display:"flex",borderBottom:"1px solid #e0e0e0",paddingLeft:16},
   tabBtn:{background:"none",border:"none",color:"#777777",padding:"14px 20px",cursor:"pointer",fontSize:13,fontFamily:"inherit",borderBottom:"2px solid transparent"},
   tabBtnActive:{color:"#b8860b",borderBottomColor:"#b8860b"},
   draftBody:{flex:1,padding:"16px 20px",overflowY:"auto",background:"#f5f5f5"},
   boardGrid:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:14},
-  boardCard:{background:"#111111",border:"1px solid rgba(255,255,255,0.1)",borderRadius:12,padding:"14px"},
+  boardCard:{background:"#ffffff",border:"1px solid #e0e0e0",borderRadius:12,padding:"14px"},
   boardHeader:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,fontWeight:700,fontSize:14},
   miniPick:{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(255,255,255,0.05)"},
 };
