@@ -18,8 +18,8 @@ jobs:
       - name: Install and build frontend
         run: |
           cd frontend
-          npm install
-          npx vite build
+          npm install --include=dev
+          ./node_modules/.bin/vite build
 
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
@@ -32,3 +32,8 @@ jobs:
           output_location: ""
           skip_app_build: true
           skip_api_build: true
+
+git commit -m "fix vite permissions"
+```
+```
+git push
