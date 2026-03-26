@@ -1,0 +1,9 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "/*.js", "/*.css", "/*.png", "/*.ico"]
+  },
+  "globalHeaders": {
+    "Access-Control-Allow-Origin": "*"
+  }
+}

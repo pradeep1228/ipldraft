@@ -1,0 +1,14 @@
+{
+  "name": "ipl-draft-api",
+  "version": "1.0.0",
+  "description": "Azure Functions backend for IPL Snake Draft",
+  "scripts": {
+    "start": "func start"
+  },
+  "dependencies": {
+    "@azure/data-tables": "^13.2.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
