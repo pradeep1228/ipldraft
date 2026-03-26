@@ -147,6 +147,7 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
   const [participantName, setParticipantName] = useState(""); const [rounds, setRounds] = useState(appState.squadRules?.total || 11);
   const [search, setSearch] = useState(""); const [filterTeam, setFilterTeam] = useState("ALL");
   const [shuffling, setShuffling] = useState(false); const [shuffleResult, setShuffleResult] = useState(null);
+  const [editingPlayer, setEditingPlayer] = useState(null); // { id, name, team, role }
   const [importStatus, setImportStatus] = useState(null); const [importing, setImporting] = useState(false);
   const VALID_TEAMS = new Set(["MI","CSK","RCB","KKR","DC","PBKS","RR","SRH","LSG","GT"]);
   const VALID_ROLES = new Set(["Batter","Bowler","All-rounder","Wicket-keeper"]);
@@ -181,6 +182,16 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
 
   function addPlayer() { if (!playerName.trim()) return; mutate(s => { s.players.push({ id: uid(), name: playerName.trim(), team: playerTeam, role: playerRole, picked: false, pickedBy: null, points: 0 }); return s; }); setPlayerName(""); }
   function removePlayer(id) { mutate(s => { s.players = s.players.filter(p => p.id !== id); return s; }); }
+
+  function savePlayerEdit() {
+    if (!editingPlayer || !editingPlayer.name.trim()) return;
+    mutate(s => {
+      const pl = s.players.find(p => p.id === editingPlayer.id);
+      if (pl) { pl.name = editingPlayer.name.trim(); pl.team = editingPlayer.team; pl.role = editingPlayer.role; }
+      return s;
+    });
+    setEditingPlayer(null);
+  }
   function addParticipant() { if (!participantName.trim()) return; const code = participantName.trim().slice(0,3).toUpperCase() + Math.random().toString(36).slice(2,5).toUpperCase(); mutate(s => { s.participants.push({ name: participantName.trim(), code, picks: [] }); return s; }); setParticipantName(""); }
   function removeParticipant(code) { mutate(s => { s.participants = s.participants.filter(p => p.code !== code); return s; }); }
 
@@ -271,7 +282,52 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
               <select style={S.select} value={filterTeam} onChange={e=>setFilterTeam(e.target.value)}><option value="ALL">All Teams</option>{IPL_TEAMS.map(t=><option key={t.id} value={t.id}>{t.id} ({teamCount[t.id]||0})</option>)}</select>
             </div>
             <div style={S.playerGrid}>
-              {filtered.map(p => { const team=IPL_TEAMS.find(t=>t.id===p.team); return (<div key={p.id} style={{...S.playerCard,borderLeft:`4px solid ${team?.color||"#777777"}`}}><div><div style={S.playerName}>{p.name}</div><div style={S.playerMeta}><span style={{...S.teamPill,background:team?.color||"#888888"}}>{p.team}</span><span style={S.rolePill}>{p.role}</span></div></div><button style={S.delBtn} onClick={()=>removePlayer(p.id)}>✕</button></div>); })}
+              {filtered.map(p => {
+                const team = IPL_TEAMS.find(t=>t.id===p.team);
+                const isEditing = editingPlayer?.id === p.id;
+                if (isEditing) {
+                  return (
+                    <div key={p.id} style={{...S.playerCard, borderLeft:`4px solid ${IPL_TEAMS.find(t=>t.id===editingPlayer.team)?.color||"#888"}`, flexDirection:"column", alignItems:"stretch", gap:10, background:"#f8f9ff", border:"1px solid #b8860b"}}>
+                      <input style={{...S.input, fontSize:13, padding:"7px 10px"}}
+                        value={editingPlayer.name}
+                        onChange={e=>setEditingPlayer(ep=>({...ep,name:e.target.value}))}
+                        onKeyDown={e=>{if(e.key==="Enter")savePlayerEdit();if(e.key==="Escape")setEditingPlayer(null);}}
+                        autoFocus />
+                      <div style={{display:"flex",gap:8}}>
+                        <select style={{...S.select,flex:1,fontSize:12,padding:"6px 8px"}}
+                          value={editingPlayer.team} onChange={e=>setEditingPlayer(ep=>({...ep,team:e.target.value}))}>
+                          {IPL_TEAMS.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}
+                        </select>
+                        <select style={{...S.select,flex:1,fontSize:12,padding:"6px 8px"}}
+                          value={editingPlayer.role} onChange={e=>setEditingPlayer(ep=>({...ep,role:e.target.value}))}>
+                          {ROLES.map(r=><option key={r}>{r}</option>)}
+                        </select>
+                      </div>
+                      <div style={{display:"flex",gap:8}}>
+                        <button style={{flex:1,background:"#1a6b35",color:"#fff",border:"none",borderRadius:8,padding:"7px",cursor:"pointer",fontWeight:600,fontSize:13}} onClick={savePlayerEdit}>✓ Save</button>
+                        <button style={{flex:1,background:"#f0f0f0",color:"#555",border:"none",borderRadius:8,padding:"7px",cursor:"pointer",fontSize:13}} onClick={()=>setEditingPlayer(null)}>✕ Cancel</button>
+                      </div>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={p.id} style={{...S.playerCard, borderLeft:`4px solid ${team?.color||"#777777"}`, cursor:"pointer"}}
+                    onClick={()=>setEditingPlayer({id:p.id,name:p.name,team:p.team,role:p.role})}>
+                    <div style={{flex:1}}>
+                      <div style={S.playerName}>{p.name}</div>
+                      <div style={S.playerMeta}>
+                        <span style={{...S.teamPill,background:team?.color||"#888888"}}>{p.team}</span>
+                        <span style={S.rolePill}>{p.role}</span>
+                        {p.picked&&<span style={{...S.rolePill,background:"#e8f5e9",color:"#1a6b35"}}>Drafted</span>}
+                      </div>
+                    </div>
+                    <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                      <span style={{fontSize:11,color:"#bbb",marginRight:4}}>✏️</span>
+                      <button style={S.delBtn} onClick={e=>{e.stopPropagation();removePlayer(p.id);}}>✕</button>
+                    </div>
+                  </div>
+                );
+              })}
               {filtered.length===0&&<p style={{color:"#777777",gridColumn:"1/-1",padding:"2rem",textAlign:"center"}}>No players yet.</p>}
             </div>
           </div>
