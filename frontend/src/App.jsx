@@ -526,24 +526,46 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
       </div>
 
       {!currentUser?.isHost&&draftStarted&&(
-        <div style={{background:"#ffffff",padding:"10px 20px",borderBottom:"1px solid #e0e0e0",display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-          <span style={{color:"#888",fontSize:12,fontWeight:600,marginRight:4}}>My squad</span>
-          {["Batter","Bowler","All-rounder","Wicket-keeper"].map(role=>{
-            const need = appState.squadRules?.roles?.[role]||0;
-            const have = myProgress.roles[role]||0;
-            const ok = need===0 ? false : have>=need;
-            const label = role==="All-rounder"?"All-rnd":role==="Wicket-keeper"?"WK":role;
-            return <span key={role} style={{fontSize:12,padding:"4px 10px",borderRadius:20,fontWeight:600,
-              background:ok?"#d4edda":have>0?"#fff8e1":"#f0f0f0",
-              color:ok?"#1a6b35":have>0?"#b8860b":"#999",
-              border:`1px solid ${ok?"#81c784":have>0?"#ffe066":"#e0e0e0"}`}}>
-              {label} {have}{need>0?`/${need}`:""}
-            </span>;
-          })}
-          <span style={{fontSize:12,color:"#888",marginLeft:"auto",fontWeight:600}}>
-            {myPicks.length}/{appState.squadRules?.total||11} picked
-          </span>
-          {squadDone&&<span style={{color:"#1a6b35",fontSize:12,fontWeight:700,background:"#d4edda",padding:"3px 10px",borderRadius:20,border:"1px solid #81c784"}}>✓ Squad full!</span>}
+        <div style={{background:"#ffffff",padding:"12px 20px",borderBottom:"1px solid #e0e0e0"}}>
+          {/* Row 1: Role counts */}
+          <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:8}}>
+            <span style={{color:"#888",fontSize:12,fontWeight:600,marginRight:4}}>My squad</span>
+            {["Batter","Bowler","All-rounder","Wicket-keeper"].map(role=>{
+              const need = appState.squadRules?.roles?.[role]||0;
+              const have = myProgress.roles[role]||0;
+              const ok = need===0 ? have>0 : have>=need;
+              const label = role==="All-rounder"?"All-rnd":role==="Wicket-keeper"?"WK":role;
+              return <span key={role} style={{fontSize:12,padding:"4px 10px",borderRadius:20,fontWeight:600,
+                background:ok?"#d4edda":have>0?"#fff8e1":"#f0f0f0",
+                color:ok?"#1a6b35":have>0?"#b8860b":"#999",
+                border:`1px solid ${ok?"#81c784":have>0?"#ffe066":"#e0e0e0"}`}}>
+                {label} {have}{need>0?`/${need}`:""}
+              </span>;
+            })}
+            <span style={{fontSize:12,color:"#888",marginLeft:"auto",fontWeight:600}}>
+              {myPicks.length}/{appState.squadRules?.total||11} picked
+            </span>
+            {squadDone&&<span style={{color:"#1a6b35",fontSize:12,fontWeight:700,background:"#d4edda",padding:"3px 10px",borderRadius:20,border:"1px solid #81c784"}}>✓ Squad full!</span>}
+          </div>
+          {/* Row 2: Team chips - shows which teams user has picked from */}
+          {myPicks.length>0&&(
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",alignItems:"center"}}>
+              <span style={{color:"#aaa",fontSize:11,marginRight:2}}>Teams:</span>
+              {IPL_TEAMS.map(t=>{
+                const picked = myPicks.map(id=>players.find(p=>p.id===id)).filter(Boolean).filter(p=>p.team===t.id);
+                const hasPick = picked.length>0;
+                return <span key={t.id} style={{
+                  fontSize:11, padding:"2px 8px", borderRadius:20, fontWeight:600,
+                  background:hasPick?t.color:"#f0f0f0",
+                  color:hasPick?"#ffffff":"#cccccc",
+                  border:`1px solid ${hasPick?t.color:"#e0e0e0"}`,
+                  transition:"all 0.2s",
+                }} title={hasPick?`${picked[0].name} (${picked[0].role})`:`No ${t.id} player yet`}>
+                  {t.id}
+                </span>;
+              })}
+            </div>
+          )}
         </div>
       )}
 
@@ -560,7 +582,7 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
 
       <div style={S.tabBar}>
         {["pick","boards","leaderboard"].map(t=><button key={t} style={{...S.tabBtn,...(viewTab===t?S.tabBtnActive:{})}} onClick={()=>setViewTab(t)}>{t==="pick"?"🎯 Pick Players":t==="boards"?"📋 All Boards":"🏆 Leaderboard"}</button>)}
-        {!currentUser?.isHost&&(squadDone||draftEnded)&&<button style={{...S.tabBtn,color:"#b8860b",borderBottom:viewTab==="mysquad"?"2px solid #FFD700":"2px solid transparent"}} onClick={()=>{setViewTab("mysquad");onViewSquad(myParticipant);}}>🏆 My Squad</button>}
+        {!currentUser?.isHost&&<button style={{...S.tabBtn,color:"#b8860b",borderBottom:viewTab==="mysquad"?"2px solid #b8860b":"2px solid transparent"}} onClick={()=>setViewTab("mysquad")}>🏆 My Squad</button>}
       </div>
 
       {viewTab==="pick"&&(
@@ -635,6 +657,15 @@ function DraftScreen({ appState, mutate, currentUser, onBack, onViewSquad }) {
               );
             })}
           </div>
+        </div>
+      )}
+
+      {viewTab==="mysquad"&&(
+        <div style={S.draftBody}>
+          {myParticipant
+            ? <InlineSquad appState={appState} participant={myParticipant} />
+            : <p style={{color:"#999",textAlign:"center",padding:"3rem"}}>No squad yet — start picking!</p>
+          }
         </div>
       )}
     </div>
