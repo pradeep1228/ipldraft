@@ -135,7 +135,8 @@ function LoginScreen({ loginCode, setLoginCode, loginError, onLogin, hostCode })
         <input style={S.input} placeholder="Enter your code" value={loginCode} onChange={e => setLoginCode(e.target.value.toUpperCase())} onKeyDown={e => e.key === "Enter" && onLogin()} maxLength={12} />
         {loginError && <p style={S.error}>{loginError}</p>}
         <button style={S.btnPrimary} onClick={onLogin}>Join Draft →</button>
-        <div style={S.hostHint}><span style={{opacity:0.5}}>Host code: </span><code style={S.hostCode}>{hostCode}</code></div>
+        <div style={S.hostHint}><span style={{opacity:0.5}}>Host code: </span><code style={S.hostCode}>
+          </code></div>
       </div>
     </div>
   );
@@ -347,51 +348,114 @@ function HostScreen({ appState, mutate, onGoToDraft, onViewSquad }) {
 
         {tab === "settings" && (
           <div>
-            <h2 style={S.sectionTitle}>Draft Settings</h2>
-            <div style={{background:"#fffbe6",border:"1px solid rgba(255,215,0,0.2)",borderRadius:12,padding:"16px 20px",marginBottom:20}}>
-              <div style={{color:"#b8860b",fontWeight:700,marginBottom:10}}>Squad Rules</div>
-              <div style={{fontSize:13,color:"#555",lineHeight:2}}>
-                ✓ Each participant picks <b>{appState.squadRules?.total || 11} players</b><br/>
-                {Object.entries(appState.squadRules?.roles || {}).filter(([,n])=>n>0).length > 0
-                  ? <>✓ Minimum: <b>{Object.entries(appState.squadRules?.roles || {}).filter(([,n])=>n>0).map(([r,n])=>`${n} ${r}(s)`).join(" · ")}</b><br/></>
-                  : <>✓ <b>No role restrictions</b><br/></>}
-                {(appState.squadRules?.maxPerTeam || 0) > 0
-                  ? <>✓ Max <b>{appState.squadRules.maxPerTeam} player(s)</b> from same team</>
-                  : <>✓ <b>No team restriction</b></>}
+            <h2 style={S.sectionTitle}>⚙️ Draft Settings</h2>
+
+            {/* Live summary card */}
+            <div style={{background:"#fffbe6",border:"1px solid #ffe066",borderRadius:12,padding:"16px 20px",marginBottom:24}}>
+              <div style={{fontSize:12,fontWeight:600,color:"#b8860b",textTransform:"uppercase",letterSpacing:"0.06em",marginBottom:10}}>Current Rules Summary</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                <span style={{padding:"5px 14px",borderRadius:20,background:"#fff3cd",border:"1px solid #ffe066",fontSize:13,fontWeight:600,color:"#856404"}}>
+                  👥 {appState.squadRules?.total||11} players per squad
+                </span>
+                {["Batter","Bowler","All-rounder","Wicket-keeper"].map(role=>{
+                  const n = appState.squadRules?.roles?.[role]||0;
+                  return <span key={role} style={{padding:"5px 14px",borderRadius:20,background:n>0?"#d4edda":"#f0f0f0",border:`1px solid ${n>0?"#81c784":"#ddd"}`,fontSize:13,fontWeight:600,color:n>0?"#1a6b35":"#999"}}>
+                    {role.slice(0,3)}: {n===0?"∞":n}
+                  </span>;
+                })}
+                <span style={{padding:"5px 14px",borderRadius:20,background:(appState.squadRules?.maxPerTeam||0)>0?"#e3f2fd":"#f0f0f0",border:`1px solid ${(appState.squadRules?.maxPerTeam||0)>0?"#90caf9":"#ddd"}`,fontSize:13,fontWeight:600,color:(appState.squadRules?.maxPerTeam||0)>0?"#1565c0":"#999"}}>
+                  🏏 Team: {(appState.squadRules?.maxPerTeam||0)===0?"∞":appState.squadRules?.maxPerTeam}
+                </span>
               </div>
+              {(()=>{
+                const rules = appState.squadRules||{total:11,roles:{},maxPerTeam:0};
+                const roleSum = Object.values(rules.roles||{}).reduce((a,b)=>a+(b||0),0);
+                const ok = roleSum <= rules.total;
+                if(!ok) return <div style={{marginTop:10,padding:"8px 12px",background:"#fff0f0",border:"1px solid #e57373",borderRadius:8,fontSize:12,color:"#cc0000"}}>⚠ Role minimums ({roleSum}) exceed squad total ({rules.total}) — reduce roles or increase total</div>;
+                return null;
+              })()}
             </div>
-            <div style={S.settingRow}><label style={S.label}>Rounds (set to 11)</label><input type="number" min={1} max={20} style={{...S.input,width:80}} value={rounds} onChange={e=>setRounds(parseInt(e.target.value)||11)} /></div>
-            {/* Max players per team */}
-            <div style={{background:"#f0f4ff",border:"1px solid #c5cae9",borderRadius:12,padding:"20px",marginBottom:20}}>
-              <div style={{color:"#3949ab",fontWeight:700,fontSize:15,marginBottom:14}}>🏏 Team Restriction</div>
-              <div style={S.settingRow}>
-                <label style={{...S.label,flex:1}}>
-                  Max players from same team
-                  <div style={{fontSize:12,color:"#888",fontWeight:400,marginTop:2}}>Set 0 = no team restriction</div>
-                </label>
-                <div style={{display:"flex",alignItems:"center",gap:10}}>
-                  <button style={{width:32,height:32,borderRadius:6,border:"1px solid #ddd",background:"#f5f5f5",fontSize:18,cursor:"pointer",color:"#555"}}
-                    onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:0};s.squadRules.maxPerTeam=Math.max(0,(s.squadRules.maxPerTeam||0)-1);return s;})}>−</button>
-                  <div style={{width:48,textAlign:"center",fontSize:20,fontWeight:700,color:(appState.squadRules?.maxPerTeam||0)===0?"#bbb":"#3949ab"}}>
-                    {(appState.squadRules?.maxPerTeam||0)===0?"∞":appState.squadRules?.maxPerTeam}
-                  </div>
-                  <button style={{width:32,height:32,borderRadius:6,border:"1px solid #ddd",background:"#f5f5f5",fontSize:18,cursor:"pointer",color:"#555"}}
-                    onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:0};s.squadRules.maxPerTeam=(s.squadRules.maxPerTeam||0)+1;return s;})}>+</button>
-                  <span style={{fontSize:13,color:(appState.squadRules?.maxPerTeam||0)===0?"#999":"#3949ab",fontWeight:600}}>
-                    {(appState.squadRules?.maxPerTeam||0)===0?"no limit":`max ${appState.squadRules?.maxPerTeam} per team`}
-                  </span>
+
+            {/* Total squad size */}
+            <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"20px",marginBottom:16,boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+              <div style={{fontWeight:700,fontSize:14,color:"#222",marginBottom:16}}>👥 Squad Size</div>
+              <div style={{display:"flex",alignItems:"center",gap:16}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,color:"#555",marginBottom:4}}>Total players per squad</div>
+                  <div style={{fontSize:12,color:"#999"}}>Each participant must pick exactly this many players</div>
                 </div>
-              </div>
-              <div style={{fontSize:12,color:"#666",marginTop:8,padding:"8px 12px",background:"#e8eaf6",borderRadius:8}}>
-                {(appState.squadRules?.maxPerTeam||0)===1
-                  ? "✓ Players can only pick 1 player from each IPL team"
-                  : (appState.squadRules?.maxPerTeam||0)===0
-                  ? "No team restriction — players can pick unlimited players from any team"
-                  : `Players can pick up to ${appState.squadRules?.maxPerTeam} players from any single IPL team`}
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <button style={{width:36,height:36,borderRadius:8,border:"1px solid #ddd",background:"#f5f5f5",fontSize:20,cursor:"pointer",color:"#555",fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}
+                    onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:1};s.squadRules.total=Math.max(1,s.squadRules.total-1);return s;})}>−</button>
+                  <div style={{width:56,height:36,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,fontWeight:800,color:"#111",background:"#f9f9f9",border:"1px solid #e0e0e0",borderRadius:8}}>
+                    {appState.squadRules?.total||11}
+                  </div>
+                  <button style={{width:36,height:36,borderRadius:8,border:"1px solid #ddd",background:"#f5f5f5",fontSize:20,cursor:"pointer",color:"#555",fontWeight:600,display:"flex",alignItems:"center",justifyContent:"center"}}
+                    onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:1};s.squadRules.total=s.squadRules.total+1;return s;})}>+</button>
+                </div>
               </div>
             </div>
 
-            <div style={S.settingRow}><label style={S.label}>Host Code</label><code style={S.hostCode}>{appState.hostCode}</code></div>
+            {/* Role restrictions */}
+            <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"20px",marginBottom:16,boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+              <div style={{fontWeight:700,fontSize:14,color:"#222",marginBottom:4}}>🎭 Role Restrictions</div>
+              <div style={{fontSize:12,color:"#999",marginBottom:16}}>Minimum required per role · Set 0 for no restriction (∞)</div>
+              {[
+                {role:"Batter",      icon:"🏏", color:"#1565c0", bg:"#e3f2fd", border:"#90caf9"},
+                {role:"Bowler",      icon:"⚡", color:"#6a1b9a", bg:"#f3e5f5", border:"#ce93d8"},
+                {role:"All-rounder", icon:"⭐", color:"#e65100", bg:"#fff3e0", border:"#ffcc02"},
+                {role:"Wicket-keeper",icon:"🧤", color:"#2e7d32", bg:"#e8f5e9", border:"#81c784"},
+              ].map(({role,icon,color,bg,border})=>{
+                const val = appState.squadRules?.roles?.[role]||0;
+                return (
+                  <div key={role} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 0",borderBottom:"1px solid #f5f5f5"}}>
+                    <div style={{width:36,height:36,borderRadius:8,background:bg,border:`1px solid ${border}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{icon}</div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:14,fontWeight:600,color:"#222"}}>{role}</div>
+                      <div style={{fontSize:12,color:"#999"}}>{val===0?"No minimum — can pick any number":"Minimum "+val+" required"}</div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <button style={{width:32,height:32,borderRadius:6,border:"1px solid #ddd",background:"#f5f5f5",fontSize:16,cursor:"pointer",color:"#555",display:"flex",alignItems:"center",justifyContent:"center"}}
+                        onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:1};const cur=s.squadRules.roles[role]||0;s.squadRules.roles[role]=Math.max(0,cur-1);return s;})}>−</button>
+                      <div style={{width:44,height:32,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:val===0?"#ccc":color,background:val===0?"#fafafa":bg,border:`1px solid ${val===0?"#eee":border}`,borderRadius:6}}>
+                        {val===0?"∞":val}
+                      </div>
+                      <button style={{width:32,height:32,borderRadius:6,border:"1px solid #ddd",background:"#f5f5f5",fontSize:16,cursor:"pointer",color:"#555",display:"flex",alignItems:"center",justifyContent:"center"}}
+                        onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:1};s.squadRules.roles[role]=(s.squadRules.roles[role]||0)+1;return s;})}>+</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Team restriction */}
+            <div style={{background:"#fff",border:"1px solid #e0e0e0",borderRadius:12,padding:"20px",marginBottom:16,boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+              <div style={{fontWeight:700,fontSize:14,color:"#222",marginBottom:4}}>🏟️ Team Restriction</div>
+              <div style={{fontSize:12,color:"#999",marginBottom:16}}>Max players allowed from the same IPL team · Set 0 for no restriction</div>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:600,color:"#222"}}>Max players per team</div>
+                  <div style={{fontSize:12,color:"#999",marginTop:2}}>
+                    {(appState.squadRules?.maxPerTeam||0)===0?"No restriction — unlimited players from any team":
+                     (appState.squadRules?.maxPerTeam||0)===1?"Only 1 player allowed from each IPL team":
+                     `Up to ${appState.squadRules?.maxPerTeam} players allowed from any single team`}
+                  </div>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <button style={{width:32,height:32,borderRadius:6,border:"1px solid #ddd",background:"#f5f5f5",fontSize:16,cursor:"pointer",color:"#555",display:"flex",alignItems:"center",justifyContent:"center"}}
+                    onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:0};s.squadRules.maxPerTeam=Math.max(0,(s.squadRules.maxPerTeam||0)-1);return s;})}>−</button>
+                  <div style={{width:44,height:32,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,fontWeight:700,color:(appState.squadRules?.maxPerTeam||0)===0?"#ccc":"#1565c0",background:(appState.squadRules?.maxPerTeam||0)===0?"#fafafa":"#e3f2fd",border:`1px solid ${(appState.squadRules?.maxPerTeam||0)===0?"#eee":"#90caf9"}`,borderRadius:6}}>
+                    {(appState.squadRules?.maxPerTeam||0)===0?"∞":appState.squadRules?.maxPerTeam}
+                  </div>
+                  <button style={{width:32,height:32,borderRadius:6,border:"1px solid #ddd",background:"#f5f5f5",fontSize:16,cursor:"pointer",color:"#555",display:"flex",alignItems:"center",justifyContent:"center"}}
+                    onClick={()=>mutate(s=>{if(!s.squadRules)s.squadRules={total:11,roles:{},maxPerTeam:0};s.squadRules.maxPerTeam=(s.squadRules.maxPerTeam||0)+1;return s;})}>+</button>
+                </div>
+              </div>
+            </div>
+
+            <div style={{background:"#f9f9f9",border:"1px solid #e0e0e0",borderRadius:10,padding:"12px 16px"}}>
+              <span style={{fontSize:13,color:"#888"}}>Host Code: </span><code style={S.hostCode}>{appState.hostCode}</code>
+            </div>
           </div>
         )}
       </div>
